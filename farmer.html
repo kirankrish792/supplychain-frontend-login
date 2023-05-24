@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Farmer Dashboard</title>
+    <style>
+      /* Customize the styles for the farmer dashboard */
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f2f2f2;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .container {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
+
+      input[type="text"],
+      input[type="number"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+
+      input[type="submit"] {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #4caf50;
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      input[type="submit"]:hover {
+        background-color: #45a049;
+      }
+
+      .product-box {
+        background-color: #f2f2f2;
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+
+      .product-info {
+        margin-bottom: 10px;
+      }
+
+      .sell-btn {
+        background-color: #f44336;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+
+      .sell-btn:hover {
+        background-color: #d32f2f;
+      }
+    </style>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7/web3.js"
+      integrity="sha512-fy0QLHporAlL073GVvyMRGjQvT2qaMuM2v/UBPu+jYavDrYKCBiWGbFbkxTSl6T4XmG15aAe0OMeM0yP1Ckvxg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="/src/web.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome, Farmer!</h1>
+      <div class="product-box">
+        <h2>Product Information</h2>
+        <form action="" id="form">
+          <div class="product-info">
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" name="quantity" required />
+          </div>
+          <div class="product-info">
+            <label for="rate">Rate:</label>
+            <input type="number" id="rate" name="rate" step="0.01" required />
+          </div>
+          <input type="submit" value="Sell Product" class="sell-btn" />
+        </form>
+      </div>
+    </div>
+    <script src="/src/isLoggnedIn.js"></script>
+    <script>
+      const form = document.querySelector("#form");
+      form.addEventListener("submit", async (e) => {
+        try {
+          e.preventDefault();
+          console.log(accounts);
+          const quantity = document.querySelector("#quantity").value;
+          const rate = document.querySelector("#rate").value;
+          const data = await contract.methods["addProduct"](
+            quantity,
+            rate
+          ).send({
+            from: accounts[0],
+            gas: "1000000",
+          });
+          const box = document.querySelector(".container");
+          if (box.childElementCount === 3) {
+            const lastchild = box.lastChild;
+            box.removeChild(lastchild);
+          }
+          const dataBox = document.createElement("div");
+          dataBox.className = "product-box";
+          if (data.status) {
+            dataBox.textContent = "Successfully Added";
+          } else {
+            dataBox.textContent = "Transaction failed";
+          }
+          box.append(dataBox);
+          document.querySelector("#quantity").value = null;
+          document.querySelector("#rate").value = null;
+        } catch (err) {
+          const box = document.querySelector(".container");
+          if (box.childElementCount === 3) {
+            const lastchild = box.lastChild;
+            box.removeChild(lastchild);
+          }
+          const dataBox = document.createElement("div");
+          dataBox.className = "product-box";
+          dataBox.textContent = err.message;
+          box.append(dataBox);
+          document.querySelector("#quantity").value = null;
+          document.querySelector("#rate").value = null;
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Retailer Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f2f2f2;
+        background-image: url("bg.jpg");
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .container {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
+
+      select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+
+      input[type="number"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+
+      input[type="submit"] {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #4caf50;
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .product-box {
+        background-color: #f2f2f2;
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+      input[type="submit"]:hover {
+        background-color: #45a049;
+      }
+    </style>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7/web3.js"
+      integrity="sha512-fy0QLHporAlL073GVvyMRGjQvT2qaMuM2v/UBPu+jYavDrYKCBiWGbFbkxTSl6T4XmG15aAe0OMeM0yP1Ckvxg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="/src/web.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome, Retailer!</h1>
+      <div class="product-box">
+        <form id="process">
+          <label for="product-id">Product ID:</label>
+          <select id="product-id" name="product-id" required></select>
+          <label for="amount">Amount to Pay:</label>
+          <input type="number" id="amount" name="amount" min="0" required />
+          <label for="quantity">Quantity:</label>
+          <input type="number" id="quantity" name="amount" min="0" required />
+          <input type="submit" value="Pay to Farmer" />
+        </form>
+      </div>
+    </div>
+    <script src="/src/isLoggnedIn.js"></script>
+    <script>
+      const render = async () => {
+        await fun();
+        const data = await contract.methods["productCounter"]().call();
+        const section = document.querySelector("#product-id");
+        for (let i = 0; i <= data; i++) {
+          const Processed = await contract.methods["getProductDetails"](
+            i
+          ).call();
+          if (!Processed[4] && Processed[3]) {
+            const option = document.createElement("option");
+            option.text =
+              "ID-" + i + " Quantity-" + Processed[2] + " Rate-" + Processed[1];
+            option.value = i;
+            section.appendChild(option);
+          }
+        }
+      };
+      render();
+    </script>
+    <script>
+      const processForm = document.querySelector("#process");
+      processForm.addEventListener("submit", async (e) => {
+        try {
+          e.preventDefault();
+          const select = document.querySelector("#product-id");
+          const quantity = document.querySelector("#quantity");
+          const value = document.querySelector("#amount");
+          const pId = select.value;
+          const data = await contract.methods["purchaseProduct"](
+            pId,
+            quantity.value
+          ).send({
+            from: accounts[0],
+            gas: "1000000",
+            value: value.value,
+          });
+          const box = document.querySelector(".container");
+
+          if (box.childElementCount === 3) {
+            const lastchild = box.lastChild;
+            box.removeChild(lastchild);
+          }
+          const dataBox = document.createElement("div");
+          dataBox.className = "product-box";
+          if (data.status) {
+            dataBox.textContent = "Successfully Processed";
+          } else {
+            dataBox.textContent = "Transaction failed";
+          }
+          box.append(dataBox);
+          const optionToRemove = select.querySelector(
+            `option[value="${value.value}"]`
+          );
+          if (optionToRemove) {
+            optionToRemove.remove();
+          }
+          quantity.value = null;
+          value.value = null;
+        } catch (err) {
+          const box = document.querySelector(".container");
+          if (box.childElementCount === 3) {
+            const lastchild = box.lastChild;
+            box.removeChild(lastchild);
+          }
+          const dataBox = document.createElement("div");
+          dataBox.className = "product-box";
+          dataBox.textContent = err.message;
+          box.append(dataBox);
+        }
+      });
+    </script>
+  </body>
+</html>

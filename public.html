@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Track your Product</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f2f2f2;
+        background-image: url("bg.jpg");
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .container {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      .form {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .form input[type="text"] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        width: 250px;
+      }
+
+      .form input[type="submit"] {
+        padding: 8px 20px;
+        background-color: #4caf50;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+
+      .progress {
+        width: 100%;
+        height: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background-color: #4caf50;
+      }
+
+      .progress-label {
+        margin-top: 10px;
+        text-align: center;
+      }
+    </style>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7/web3.js"
+      integrity="sha512-fy0QLHporAlL073GVvyMRGjQvT2qaMuM2v/UBPu+jYavDrYKCBiWGbFbkxTSl6T4XmG15aAe0OMeM0yP1Ckvxg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="/src/web.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Track your Product</h1>
+      <div class="form">
+        <form id="orderForm">
+          <label for="orderId">Order ID:</label>
+          <input
+            type="text"
+            id="orderId"
+            name="orderId"
+            placeholder="Enter order ID"
+            required
+          />
+          <input type="submit" value="Track" />
+        </form>
+      </div>
+      <div id="trackingInfo" style="display: none">
+        <div class="progress">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p class="progress-label" id="statusLabel"></p>
+      </div>
+    </div>
+    <script>
+      document
+        .getElementById("orderForm")
+        .addEventListener("submit", async function (event) {
+          try {
+            event.preventDefault();
+            await fun();
+            let orderId = document.getElementById("orderId").value;
+            const Processed = await contract.methods["getProductDetails"](
+              orderId
+            ).call();
+            if (Processed <= 0) {
+              throw new Error("Invalid Product ID");
+            }
+            let trackingInfo;
+            if (!Processed[3] && !Processed[4]) {
+              trackingInfo = {
+                status: "Product Added",
+                progress: 33,
+              };
+            } else if (Processed[3] && !Processed[4]) {
+              trackingInfo = {
+                status: "Processed",
+                progress: 60,
+              };
+            } else {
+              trackingInfo = {
+                status: "Purchased",
+                progress: 100,
+              };
+            }
+            trackOrder(trackingInfo);
+          } catch (err) {
+            const box = document.querySelector(".container");
+            if (box.childElementCount === 3) {
+              const lastchild = box.lastChild;
+              box.removeChild(lastchild);
+            }
+            const dataBox = document.createElement("div");
+            dataBox.className = "product-box";
+            dataBox.textContent = err.message;
+            box.append(dataBox);
+          }
+        });
+      function trackOrder(trackingInfo) {
+        document.getElementById("progressBar").style.width =
+          trackingInfo.progress + "%";
+        document.getElementById("statusLabel").textContent =
+          "Status: " + trackingInfo.status;
+        document.getElementById("trackingInfo").style.display = "block";
+      }
+    </script>
+  </body>
+</html>
